@@ -22,6 +22,28 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
+# Collect user information
+echo ""
+echo "==================================="
+echo "  Home Computer Configuration"
+echo "==================================="
+echo ""
+echo "Enter your home computer details:"
+echo ""
+read -p "Username (e.g., john): " HOME_USER
+read -p "Domain or IP (e.g., home.example.com): " HOME_DOMAIN
+echo ""
+echo "Configuration:"
+echo "  User: $HOME_USER"
+echo "  Domain: $HOME_DOMAIN"
+echo ""
+read -p "Is this correct? (y/n) " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Setup cancelled. Run script again to re-enter details."
+    exit 1
+fi
+
 # Update packages
 echo ""
 echo "[1/7] Updating package repositories..."
@@ -71,17 +93,21 @@ fi
 # Setup TRENT aliases and helper functions
 echo "[7/7] Setting up TRENT commands..."
 
-# Add TRENT functions to .zshrc
-cat >> ~/.zshrc << 'EOF'
+# Add TRENT aliases to .zshrc (with variable expansion)
+cat >> ~/.zshrc << EOF
 
 # ============================================
 # TRENT System - Bidirectional SSH
 # ============================================
 
-# Aliases - UPDATE THESE WITH YOUR DETAILS
-alias home="ssh YOUR_USER@YOUR_DOMAIN.com"
-alias tunnel="ssh -R 8022:localhost:8022 YOUR_USER@YOUR_DOMAIN.com"
-alias home-tunnel="ssh -Y -R 8022:localhost:8022 YOUR_USER@YOUR_DOMAIN.com"
+# Aliases configured during setup
+alias home="ssh $HOME_USER@$HOME_DOMAIN"
+alias tunnel="ssh -R 8022:localhost:8022 $HOME_USER@$HOME_DOMAIN"
+alias home-tunnel="ssh -Y -R 8022:localhost:8022 $HOME_USER@$HOME_DOMAIN"
+EOF
+
+# Add TRENT helper functions (no variable expansion needed)
+cat >> ~/.zshrc << 'EOF'
 
 # TRENT Helper Commands
 trent() {
@@ -179,26 +205,23 @@ echo "==================================="
 echo "  Setup Complete!"
 echo "==================================="
 echo ""
-echo "IMPORTANT: Edit your aliases!"
-echo "Run: nano ~/.zshrc"
-echo ""
-echo "Find these lines and update with your details:"
-echo "  alias home=\"ssh YOUR_USER@YOUR_DOMAIN.com\""
-echo "  alias tunnel=\"ssh -R 8022:localhost:8022 YOUR_USER@YOUR_DOMAIN.com\""
-echo ""
 echo "Your Termux username: $(whoami)"
 echo "SSH server running on port 8022"
+echo ""
+echo "Configured aliases:"
+echo "  home         → ssh $HOME_USER@$HOME_DOMAIN"
+echo "  tunnel       → ssh -R 8022:localhost:8022 $HOME_USER@$HOME_DOMAIN"
+echo "  home-tunnel  → ssh -Y -R 8022:localhost:8022 $HOME_USER@$HOME_DOMAIN"
 echo ""
 echo "Your public key (add this to your computer's authorized_keys):"
 echo ""
 cat ~/.ssh/id_ed25519.pub
 echo ""
 echo "Next steps:"
-echo "  1. Edit ~/.zshrc with your computer's details"
-echo "  2. Add the public key above to your computer's ~/.ssh/authorized_keys"
-echo "  3. Add your computer's public key to ~/.ssh/authorized_keys on phone"
-echo "  4. Restart shell: exec zsh"
-echo "  5. Test: home"
+echo "  1. Add the public key above to your computer's ~/.ssh/authorized_keys"
+echo "  2. Add your computer's public key to ~/.ssh/authorized_keys on this phone"
+echo "  3. Restart shell: exec zsh"
+echo "  4. Test connection: home"
 echo ""
 echo "Run 'trent help' anytime for usage info"
 echo ""
